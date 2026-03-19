@@ -1,0 +1,45 @@
+{
+  "buildCommand": "npm run build && npx prisma generate",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install && npx prisma generate",
+  "env": [
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "NEXTAUTH_SECRET",
+    "NEXTAUTH_URL"
+  ],
+  "envDescription": {
+    "DATABASE_URL": "PostgreSQL connection string (pool/AWS connection)",
+    "DIRECT_URL": "Direct PostgreSQL connection for migrations",
+    "SUPABASE_URL": "Supabase project URL",
+    "SUPABASE_SERVICE_ROLE_KEY": "Supabase service role key for admin operations",
+    "NEXTAUTH_SECRET": "Random 32+ char string for JWT signing (generate: `openssl rand -base64 32`)",
+    "NEXTAUTH_URL": "Your production domain URL (e.g., https://yourdomain.com)"
+  },
+  "functions": {
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "redirects": [
+    {
+      "source": "/old-path",
+      "destination": "/new-path",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ]
+}
