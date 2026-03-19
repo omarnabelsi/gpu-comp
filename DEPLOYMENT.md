@@ -28,6 +28,7 @@ In the Vercel dashboard, add the following secrets before deploying:
 | `DATABASE_URL` | PostgreSQL connection string (pooler) | `postgresql://user:password@aws-1-*.pooler.supabase.com:5432/postgres` |
 | `DIRECT_URL` | Direct PostgreSQL URL (for migrations) | `postgresql://user:password@db.*.supabase.co:5432/postgres` |
 | `SUPABASE_URL` | Supabase project URL | `https://your-project.supabase.co` |
+| `SUPABASE_ANON_KEY` | Supabase anon key (for public client usage) | From Supabase Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | From Supabase Settings → API |
 | `NEXTAUTH_SECRET` | JWT signing secret (min 32 chars) | Run: `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Your production domain | `https://yourdomain.com` |
@@ -48,6 +49,14 @@ In the Vercel dashboard, add the following secrets before deploying:
 4. Visit your deployed site when ready
 
 ## Troubleshooting
+
+### Vercel Project Root Directory
+
+This repository contains the app in the `gpu-tech` subfolder. In Vercel, set:
+
+- **Root Directory**: `gpu-tech`
+
+If root directory is left at repository root, Next.js and API route detection can fail.
 
 ### Build Fails with Prisma Errors
 

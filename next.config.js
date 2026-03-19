@@ -21,27 +21,9 @@ const nextConfig = {
         ],
     },
     // Vercel optimizations
-    swcMinify: true,
     reactStrictMode: true,
     poweredByHeader: false,
     compress: true,
-    // Redirect to HTTPS on Vercel
-    ...(process.env.VERCEL_ENV === 'production' && {
-        redirects: async () => [
-            {
-                source: '/:path*',
-                has: [
-                    {
-                        type: 'header',
-                        key: 'x-forwarded-proto',
-                        value: 'http',
-                    },
-                ],
-                destination: 'https://:host/:path*',
-                permanent: true,
-            },
-        ],
-    }),
 };
 
 export default nextConfig;
