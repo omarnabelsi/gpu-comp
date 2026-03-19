@@ -5,8 +5,8 @@ Next.js full-stack platform for GPU hardware, AI computing, and gaming systems.
 ## Stack
 
 - Next.js App Router
-- TypeScript
-- Tailwind CSS
+- JavaScript
+- CSS
 - Prisma ORM
 - Supabase Postgres
 - NextAuth
