@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -17,6 +17,9 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/client": "^6.16.3",
+    "@splinetool/react-spline": "^4.0.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "@supabase/supabase-js": "^2.99.2",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.37.0",
@@ -26,6 +29,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-parallax-tilt": "^1.7.320",
+    "three": "^0.183.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
