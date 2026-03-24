@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { Container } from "@/components/ui/container";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { isCustomer } from "@/lib/roles";
 import { bem } from "@/lib/bem";
 const links = [
     { href: "/", label: "Home" },
@@ -16,6 +17,7 @@ const links = [
 ];
 export async function Navbar() {
     const session = await auth();
+  const showDashboard = Boolean(session?.user) && !isCustomer(session.user.role);
     return (<header className={bem("components-layout-navbar__c1")}>
       <Container className={bem("components-layout-navbar__c2")}>
         <Link href="/" className={bem("components-layout-navbar__c3")}>
@@ -28,15 +30,15 @@ export async function Navbar() {
         </nav>
         <div className={bem("components-layout-navbar__c6")}>
           {session?.user ? (<>
-              <Link href="/dashboard" className={bem("components-layout-navbar__c7")}>
-                Dashboard
-              </Link>
+              {showDashboard ? (<Link href="/dashboard" className={bem("components-layout-navbar__c7")}>
+                  Dashboard
+                </Link>) : null}
               <SignOutButton />
             </>) : (<Link href="/login" className={bem("components-layout-navbar__c8")}>
               Login
             </Link>)}
         </div>
-        <MobileNav links={links} isLoggedIn={Boolean(session?.user)}/>
+        <MobileNav links={links} isLoggedIn={Boolean(session?.user)} showDashboard={showDashboard}/>
       </Container>
     </header>);
 }

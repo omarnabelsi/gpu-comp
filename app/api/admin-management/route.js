@@ -1,0 +1,121 @@
+import bcrypt from "bcryptjs";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { isSuperAdmin, toPublicRole } from "@/lib/roles";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+const createAdminSchema = z.object({
+    name: z.string().trim().min(2),
+    email: z.string().trim().email(),
+    password: z.string().min(8),
+});
+
+async function requireSuperAdmin() {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { ok: false, response: NextResponse.json({ message: "Unauthorized" }, { status: 401 }) };
+    }
+
+    const currentUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { id: true, role: true },
+    });
+
+    if (!currentUser || !isSuperAdmin(currentUser.role)) {
+        return { ok: false, response: NextResponse.json({ message: "Forbidden" }, { status: 403 }) };
+    }
+
+    return { ok: true, user: currentUser };
+}
+
+export async function GET() {
+    const access = await requireSuperAdmin();
+    if (!access.ok) {
+        return access.response;
+    }
+
+    const admins = await prisma.user.findMany({
+        where: {
+            role: {
+                in: ["SUPER_ADMIN", "ADMIN"],
+            },
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+        },
+    });
+
+    return NextResponse.json(
+        admins.map((admin) => ({
+            ...admin,
+            role: toPublicRole(admin.role),
+        }))
+    );
+}
+
+export async function POST(request) {
+    const access = await requireSuperAdmin();
+    if (!access.ok) {
+        return access.response;
+    }
+
+    const body = await request.json();
+    const parsed = createAdminSchema.safeParse(body);
+    if (!parsed.success) {
+        return NextResponse.json({ message: "Invalid data" }, { status: 400 });
+    }
+
+    const name = parsed.data.name;
+    const email = parsed.data.email.toLowerCase();
+    const password = parsed.data.password;
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+        return NextResponse.json({ message: "Email is already registered." }, { status: 409 });
+    }
+
+    const { data: supabaseUserData, error: supabaseError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { name },
+    });
+
+    if (supabaseError) {
+        return NextResponse.json({ message: supabaseError.message || "Supabase create user failed." }, { status: 400 });
+    }
+
+    const supabaseUserId = supabaseUserData.user?.id ?? null;
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const created = await prisma.user.create({
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+                role: "ADMIN",
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+            },
+        });
+
+        return NextResponse.json({ ...created, role: toPublicRole(created.role) }, { status: 201 });
+    }
+    catch {
+        if (supabaseUserId) {
+            await supabaseAdmin.auth.admin.deleteUser(supabaseUserId);
+        }
+        return NextResponse.json({ message: "Failed to create admin." }, { status: 500 });
+    }
+}

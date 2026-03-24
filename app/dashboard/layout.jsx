@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { canManageSection } from "@/lib/permissions";
+import { isAdmin, isSuperAdmin, normalizeRole } from "@/lib/roles";
 import { Container } from "@/components/ui/container";
 import { bem } from "@/lib/bem";
 export default async function DashboardLayout({ children }) {
@@ -10,6 +11,9 @@ export default async function DashboardLayout({ children }) {
         redirect("/login");
     }
     const role = session.user.role;
+  if (normalizeRole(role) === "CUSTOMER") {
+    redirect("/");
+  }
     const assigned = session.user.assignedSections;
     const navItems = [
         { href: "/dashboard", label: "Overview", show: true },
@@ -17,8 +21,10 @@ export default async function DashboardLayout({ children }) {
         { href: "/dashboard/projects", label: "Projects", show: canManageSection(role, assigned, "PROJECTS") },
         { href: "/dashboard/news", label: "News", show: canManageSection(role, assigned, "NEWS") },
         { href: "/dashboard/site-content", label: "Site Content", show: canManageSection(role, assigned, "SITE") },
-        { href: "/dashboard/contacts", label: "Contact Submissions", show: role === "ADMIN" },
-        { href: "/dashboard/interests", label: "Project Interests", show: role === "ADMIN" },
+    { href: "/dashboard/customers", label: "Customers", show: isAdmin(role) },
+        { href: "/dashboard/contacts", label: "Contact Submissions", show: isAdmin(role) },
+        { href: "/dashboard/interests", label: "Project Interests", show: isAdmin(role) },
+        { href: "/dashboard/admin-management", label: "Admin Management", show: isSuperAdmin(role) },
     ];
     return (<Container className={bem("app-dashboard-layout__c1")}>
       <aside className={bem("app-dashboard-layout__c2")} style={{ borderRadius: "20px 3px 20px 3px" }}>

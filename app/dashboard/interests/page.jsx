@@ -1,11 +1,12 @@
 import { ProjectInterestsTable } from "@/components/dashboard/project-interests-table";
 import { auth } from "@/lib/auth";
+import { canViewCustomers } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { bem } from "@/lib/bem";
 export default async function DashboardInterestsPage() {
     const session = await auth();
-    if (!session?.user || !["ADMIN", "EDITOR"].includes(session.user.role)) {
+  if (!session?.user || !canViewCustomers(session.user.role)) {
         redirect("/dashboard");
     }
     const items = await prisma.projectInterest.findMany({
@@ -17,6 +18,6 @@ export default async function DashboardInterestsPage() {
         <p className={bem("app-dashboard-interests-page__c3")}>PIPELINE OPS</p>
         <h1 className={bem("app-dashboard-interests-page__c4")}>Project Interests</h1>
       </div>
-      <ProjectInterestsTable items={items}/>
+      <ProjectInterestsTable items={items} initialRole={session.user.role}/>
     </div>);
 }

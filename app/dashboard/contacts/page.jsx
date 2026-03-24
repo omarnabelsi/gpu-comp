@@ -1,11 +1,13 @@
 import { ContactSubmissionsTable } from "@/components/dashboard/contact-submissions-table";
 import { auth } from "@/lib/auth";
+import { isSuperAdmin } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { bem } from "@/lib/bem";
 export default async function DashboardContactsPage() {
     const session = await auth();
-    if (!session?.user || !["ADMIN", "EDITOR"].includes(session.user.role)) {
+  const role = session?.user?.role;
+  if (!session?.user || (!isSuperAdmin(role) && !["ADMIN", "EDITOR"].includes(role))) {
         redirect("/dashboard");
     }
     const items = await prisma.contactSubmission.findMany({

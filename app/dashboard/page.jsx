@@ -1,7 +1,9 @@
 import { GlassCard } from "@/components/ui/glass-card";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { bem } from "@/lib/bem";
 export default async function DashboardOverviewPage() {
+  const session = await auth();
     const [blogCount, projectCount, newsCount, contactCount, interestCount] = await Promise.all([
         prisma.blogPost.count(),
         prisma.project.count(),

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { bem } from "@/lib/bem";
-export function MobileNav({ links, isLoggedIn }) {
+export function MobileNav({ links, isLoggedIn, showDashboard }) {
     const [open, setOpen] = useState(false);
     return (<div className={bem("components-layout-mobile-nav__c1")}>
       <button type="button" onClick={() => setOpen(!open)} className={bem("components-layout-mobile-nav__c2")} style={{ borderRadius: "12px 2px 12px 2px" }}>
@@ -18,9 +18,12 @@ export function MobileNav({ links, isLoggedIn }) {
           {links.map((link) => (<Link key={link.href} href={link.href} onClick={() => setOpen(false)} className={bem("components-layout-mobile-nav__c6")}>
               {link.label}
             </Link>))}
-          <Link href={isLoggedIn ? "/dashboard" : "/login"} onClick={() => setOpen(false)} className={bem("components-layout-mobile-nav__c7")}>
-            {isLoggedIn ? "Dashboard" : "Login"}
-          </Link>
+          {!isLoggedIn ? (<Link href="/login" onClick={() => setOpen(false)} className={bem("components-layout-mobile-nav__c7")}>
+              Login
+            </Link>) : null}
+          {isLoggedIn && showDashboard ? (<Link href="/dashboard" onClick={() => setOpen(false)} className={bem("components-layout-mobile-nav__c7")}>
+              Dashboard
+            </Link>) : null}
         </nav>
       </div>
     </div>);

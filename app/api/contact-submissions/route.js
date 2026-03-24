@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isSuperAdmin } from "@/lib/roles";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 const submissionSchema = z.object({
@@ -10,7 +11,8 @@ const submissionSchema = z.object({
 });
 export async function GET() {
     const session = await auth();
-    if (!session?.user || !["ADMIN", "EDITOR"].includes(session.user.role)) {
+    const role = session?.user?.role;
+    if (!session?.user || (!isSuperAdmin(role) && !["ADMIN", "EDITOR"].includes(role))) {
         return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
     const items = await prisma.contactSubmission.findMany({
