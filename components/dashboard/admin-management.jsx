@@ -10,6 +10,9 @@ function normalizeInitialRole(role) {
     if (value === "ADMIN") {
         return "admin";
     }
+    if (value === "EDITOR") {
+        return "editor";
+    }
     return "customer";
 }
 
@@ -21,6 +24,7 @@ export function AdminManagement({ initialRole }) {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [newRole, setNewRole] = useState("admin");
     const isSuperAdmin = useMemo(() => role === "super_admin", [role]);
 
     useEffect(() => {
@@ -82,7 +86,7 @@ export function AdminManagement({ initialRole }) {
         const response = await fetch("/api/admin-management", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password }),
+            body: JSON.stringify({ name, email, password, role: newRole }),
         });
 
         const data = await response.json();
@@ -95,12 +99,13 @@ export function AdminManagement({ initialRole }) {
         setName("");
         setEmail("");
         setPassword("");
+        setNewRole("admin");
         setShowModal(false);
-        setStatus("Admin created.");
+        setStatus("User created.");
     }
 
     async function handleDeleteAdmin(id) {
-        if (!window.confirm("Delete this admin?")) {
+        if (!window.confirm("Delete this user?")) {
             return;
         }
 
@@ -116,7 +121,7 @@ export function AdminManagement({ initialRole }) {
         }
 
         setAdmins((prev) => prev.filter((item) => item.id !== id));
-        setStatus("Admin deleted.");
+        setStatus("User deleted.");
     }
 
     if (!isSuperAdmin) {
@@ -131,7 +136,7 @@ export function AdminManagement({ initialRole }) {
                     <h2 className="mt-2 text-2xl font-black text-white">Admin Management</h2>
                 </div>
                 <button className="premium-btn premium-btn-primary premium-control text-white" onClick={() => setShowModal(true)}>
-                    Add Admin
+                    Add User
                 </button>
             </div>
 
@@ -152,7 +157,7 @@ export function AdminManagement({ initialRole }) {
                                 <td className="px-4 py-3">{admin.email}</td>
                                 <td className="px-4 py-3 uppercase tracking-[0.12em] text-purple-300">{admin.role}</td>
                                 <td className="px-4 py-3">
-                                    {admin.role === "admin" ? (
+                                    {admin.role !== "super_admin" ? (
                                         <button
                                             type="button"
                                             className="premium-btn premium-control border-rose-400/70 bg-rose-500/20 text-sm text-rose-200"
@@ -173,8 +178,8 @@ export function AdminManagement({ initialRole }) {
             {showModal ? (
                 <div className="fixed inset-0 z-50 grid place-items-center bg-black/65 p-4">
                     <div className="surface-panel w-full max-w-md space-y-3 p-5" style={{ borderRadius: "16px 3px 16px 3px" }}>
-                        <p className="text-xs tracking-[0.2em] text-zinc-400">CREATE ADMIN</p>
-                        <h3 className="text-xl font-bold text-white">Add Admin</h3>
+                        <p className="text-xs tracking-[0.2em] text-zinc-400">CREATE USER</p>
+                        <h3 className="text-xl font-bold text-white">Add User</h3>
 
                         <form onSubmit={handleCreateAdmin} className="space-y-3">
                             <input
@@ -201,6 +206,10 @@ export function AdminManagement({ initialRole }) {
                                 required
                                 minLength={8}
                             />
+                            <select value={newRole} onChange={(event) => setNewRole(event.target.value)} className="premium-input" required>
+                                <option value="admin">Admin</option>
+                                <option value="editor">Editor</option>
+                            </select>
 
                             <div className="flex gap-2">
                                 <button className="premium-btn premium-btn-primary premium-control text-white" type="submit">

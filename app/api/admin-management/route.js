@@ -10,6 +10,7 @@ const createAdminSchema = z.object({
     name: z.string().trim().min(2),
     email: z.string().trim().email(),
     password: z.string().min(8),
+    role: z.enum(["admin", "editor"]).default("admin"),
 });
 
 async function requireSuperAdmin() {
@@ -39,7 +40,7 @@ export async function GET() {
     const admins = await prisma.user.findMany({
         where: {
             role: {
-                in: ["SUPER_ADMIN", "ADMIN"],
+                in: ["SUPER_ADMIN", "ADMIN", "EDITOR"],
             },
         },
         orderBy: { createdAt: "desc" },
@@ -74,6 +75,7 @@ export async function POST(request) {
     const name = parsed.data.name;
     const email = parsed.data.email.toLowerCase();
     const password = parsed.data.password;
+    const userRole = parsed.data.role === "editor" ? "EDITOR" : "ADMIN";
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -100,7 +102,7 @@ export async function POST(request) {
                 name,
                 email,
                 password: hashedPassword,
-                role: "ADMIN",
+                role: userRole,
             },
             select: {
                 id: true,
@@ -116,6 +118,6 @@ export async function POST(request) {
         if (supabaseUserId) {
             await supabaseAdmin.auth.admin.deleteUser(supabaseUserId);
         }
-        return NextResponse.json({ message: "Failed to create admin." }, { status: 500 });
+        return NextResponse.json({ message: "Failed to create user." }, { status: 500 });
     }
 }

@@ -61,7 +61,7 @@ export async function DELETE(_request, { params }) {
     }
 
     const targetRole = normalizeRole(target.role);
-    if (!["ADMIN", "CUSTOMER"].includes(targetRole)) {
+    if (!["ADMIN", "EDITOR", "CUSTOMER"].includes(targetRole)) {
         return NextResponse.json({ message: "This user cannot be deleted." }, { status: 403 });
     }
 
