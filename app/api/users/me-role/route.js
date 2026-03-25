@@ -11,12 +11,16 @@ export async function GET() {
 
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { role: true },
+        select: { role: true, permissions: true, assignedSections: true },
     });
 
     if (!user) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    return NextResponse.json({ role: toPublicRole(user.role) });
+    return NextResponse.json({
+        role: toPublicRole(user.role),
+        permissions: Array.isArray(user.permissions) ? user.permissions : [],
+        assignedSections: user.assignedSections ?? "",
+    });
 }

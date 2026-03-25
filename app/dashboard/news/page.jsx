@@ -5,6 +5,7 @@ import { getPagination, getTotalPages } from "@/lib/pagination";
 import { canManageSection } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { bem } from "@/lib/bem";
+import { redirect } from "next/navigation";
 export default async function DashboardNewsPage({ searchParams }) {
     const session = await auth();
     const params = await searchParams;
@@ -12,6 +13,10 @@ export default async function DashboardNewsPage({ searchParams }) {
     const { page, pageSize, skip } = getPagination(params, 6);
     if (!session?.user) {
         return null;
+    }
+    const canEdit = canManageSection(session.user.role, session.user.permissions, session.user.assignedSections, "NEWS");
+    if (!canEdit) {
+      redirect("/dashboard");
     }
     const where = query
         ? {
@@ -23,7 +28,6 @@ export default async function DashboardNewsPage({ searchParams }) {
         prisma.newsItem.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: pageSize }),
     ]);
     const totalPages = getTotalPages(total, pageSize);
-    const canEdit = canManageSection(session.user.role, session.user.assignedSections, "NEWS");
     return (<div className={bem("app-dashboard-news-page__c1")}>
       <div className={bem("app-dashboard-news-page__c2")} style={{ borderRadius: "14px 2px 14px 2px" }}>
         <p className={bem("app-dashboard-news-page__c3")}>UPDATES OPS</p>

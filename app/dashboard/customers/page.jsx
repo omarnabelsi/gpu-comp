@@ -1,13 +1,13 @@
 import { CustomersTable } from "@/components/dashboard/customers-table";
 import { auth } from "@/lib/auth";
 import { bem } from "@/lib/bem";
-import { canViewCustomers } from "@/lib/roles";
+import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
 export default async function DashboardCustomersPage() {
     const session = await auth();
-    if (!session?.user || !canViewCustomers(session.user.role)) {
+    if (!session?.user || !hasPermission(session.user.role, session.user.permissions, session.user.assignedSections, "USERS")) {
         redirect("/dashboard");
     }
 

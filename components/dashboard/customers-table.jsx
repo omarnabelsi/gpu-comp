@@ -1,18 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { normalizeRole } from "@/lib/roles";
 
 export function CustomersTable({ initialItems, initialRole }) {
     const [items, setItems] = useState(initialItems);
     const [status, setStatus] = useState("");
+    const [pendingDeleteId, setPendingDeleteId] = useState("");
     const canDelete = useMemo(() => normalizeRole(initialRole) === "SUPER_ADMIN", [initialRole]);
 
     async function handleDelete(id) {
-        if (!window.confirm("Delete this customer?")) {
-            return;
-        }
-
         setStatus("");
         const response = await fetch(`/api/customers?id=${id}`, { method: "DELETE" });
         const data = await response.json();
@@ -24,6 +22,7 @@ export function CustomersTable({ initialItems, initialRole }) {
 
         setItems((prev) => prev.filter((item) => item.id !== id));
         setStatus("Customer deleted.");
+        setPendingDeleteId("");
     }
 
     return (
@@ -50,7 +49,7 @@ export function CustomersTable({ initialItems, initialRole }) {
                                     <button
                                         type="button"
                                         className="premium-btn premium-control border-rose-400/70 bg-rose-500/20 px-3 py-1 text-sm text-rose-200"
-                                        onClick={() => handleDelete(item.id)}
+                                        onClick={() => setPendingDeleteId(item.id)}
                                     >
                                         Delete
                                     </button>
@@ -61,6 +60,14 @@ export function CustomersTable({ initialItems, initialRole }) {
                 </tbody>
             </table>
             {status ? <p className="px-4 py-3 text-sm text-zinc-300">{status}</p> : null}
+            <ConfirmationDialog
+                open={Boolean(pendingDeleteId)}
+                message="Are you sure you want to delete this?"
+                confirmText="Confirm"
+                cancelText="Cancel"
+                onCancel={() => setPendingDeleteId("")}
+                onConfirm={() => handleDelete(pendingDeleteId)}
+            />
         </div>
     );
 }

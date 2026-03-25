@@ -10,8 +10,17 @@ const createAdminSchema = z.object({
     name: z.string().trim().min(2),
     email: z.string().trim().email(),
     password: z.string().min(8),
-    role: z.enum(["admin", "editor"]).default("admin"),
+    role: z.enum(["admin", "editor", "super_admin"]).default("admin"),
+    permissions: z.array(z.string()).default([]),
 });
+
+function toAssignedSections(permissions) {
+    const sections = permissions.filter((item) => ["BLOG", "NEWS", "PROJECTS", "SITE"].includes(item));
+    if (sections.length === 0) {
+        return "BLOG";
+    }
+    return Array.from(new Set(sections)).join(",");
+}
 
 async function requireSuperAdmin() {
     const session = await auth();
@@ -37,20 +46,41 @@ export async function GET() {
         return access.response;
     }
 
-    const admins = await prisma.user.findMany({
-        where: {
-            role: {
-                in: ["SUPER_ADMIN", "ADMIN", "EDITOR"],
+    let admins;
+    try {
+        admins = await prisma.user.findMany({
+            where: {
+                role: {
+                    in: ["SUPER_ADMIN", "ADMIN", "EDITOR"],
+                },
             },
-        },
-        orderBy: { createdAt: "desc" },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-        },
-    });
+            orderBy: { createdAt: "desc" },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                permissions: true,
+            },
+        });
+    }
+    catch {
+        const legacyAdmins = await prisma.user.findMany({
+            where: {
+                role: {
+                    in: ["SUPER_ADMIN", "ADMIN", "EDITOR"],
+                },
+            },
+            orderBy: { createdAt: "desc" },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+            },
+        });
+        admins = legacyAdmins.map((admin) => ({ ...admin, permissions: [] }));
+    }
 
     return NextResponse.json(
         admins.map((admin) => ({
@@ -75,7 +105,8 @@ export async function POST(request) {
     const name = parsed.data.name;
     const email = parsed.data.email.toLowerCase();
     const password = parsed.data.password;
-    const userRole = parsed.data.role === "editor" ? "EDITOR" : "ADMIN";
+    const userRole = parsed.data.role === "editor" ? "EDITOR" : parsed.data.role === "super_admin" ? "SUPER_ADMIN" : "ADMIN";
+    const normalizedPermissions = sanitizePermissions(parsed.data.permissions);
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -97,22 +128,46 @@ export async function POST(request) {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 12);
-        const created = await prisma.user.create({
-            data: {
-                name,
-                email,
-                password: hashedPassword,
-                role: userRole,
-            },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                role: true,
-            },
-        });
+        try {
+            const created = await prisma.user.create({
+                data: {
+                    name,
+                    email,
+                    password: hashedPassword,
+                    role: userRole,
+                    permissions: normalizedPermissions,
+                    assignedSections: toAssignedSections(normalizedPermissions),
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    permissions: true,
+                },
+            });
 
-        return NextResponse.json({ ...created, role: toPublicRole(created.role) }, { status: 201 });
+            return NextResponse.json({ ...created, role: toPublicRole(created.role) }, { status: 201 });
+        }
+        catch {
+            const createdLegacy = await prisma.user.create({
+                data: {
+                    name,
+                    email,
+                    password: hashedPassword,
+                    role: userRole,
+                    assignedSections: toAssignedSections(normalizedPermissions),
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                },
+            });
+
+            return NextResponse.json({ ...createdLegacy, role: toPublicRole(createdLegacy.role), permissions: [] }, { status: 201 });
+        }
     }
     catch {
         if (supabaseUserId) {
@@ -120,4 +175,12 @@ export async function POST(request) {
         }
         return NextResponse.json({ message: "Failed to create user." }, { status: 500 });
     }
+}
+
+function sanitizePermissions(values) {
+    const allowed = new Set(["BLOG", "NEWS", "PROJECTS", "SITE", "USERS", "CONTACTS", "INTERESTS"]);
+    const normalized = Array.isArray(values)
+        ? values.map((value) => String(value ?? "").trim().toUpperCase()).filter((value) => allowed.has(value))
+        : [];
+    return Array.from(new Set(normalized));
 }

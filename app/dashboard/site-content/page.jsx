@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { canManageSection } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { bem } from "@/lib/bem";
+import { redirect } from "next/navigation";
 
 const requiredHeroSections = [
   {
@@ -75,10 +76,13 @@ export default async function DashboardSiteContentPage() {
     if (!session?.user) {
         return null;
     }
+  const canEdit = canManageSection(session.user.role, session.user.permissions, session.user.assignedSections, "SITE");
+  if (!canEdit) {
+    redirect("/dashboard");
+  }
     const sections = await prisma.siteSection.findMany({ orderBy: { key: "asc" } });
     const existingKeys = new Set(sections.map((section) => section.key));
     const mergedSections = [...sections, ...requiredHeroSections.filter((section) => !existingKeys.has(section.key))].sort((a, b) => a.key.localeCompare(b.key));
-    const canEdit = canManageSection(session.user.role, session.user.assignedSections, "SITE");
     return (<div className={bem("app-dashboard-site-content-page__c1")}>
       <div className={bem("app-dashboard-site-content-page__c2")} style={{ borderRadius: "14px 2px 14px 2px" }}>
         <p className={bem("app-dashboard-site-content-page__c3")}>SITE SYSTEM</p>

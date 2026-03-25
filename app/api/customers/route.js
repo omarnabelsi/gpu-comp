@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
-import { canViewCustomers, isSuperAdmin } from "@/lib/roles";
+import { isSuperAdmin } from "@/lib/roles";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { NextResponse } from "next/server";
 
@@ -20,7 +21,7 @@ async function findSupabaseUserIdByEmail(email) {
 
 export async function GET() {
     const session = await auth();
-    if (!session?.user || !canViewCustomers(session.user.role)) {
+    if (!session?.user || !hasPermission(session.user.role, session.user.permissions, session.user.assignedSections, "USERS")) {
         return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 

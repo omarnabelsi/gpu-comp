@@ -1,12 +1,17 @@
 import { ProjectInterestsTable } from "@/components/dashboard/project-interests-table";
 import { auth } from "@/lib/auth";
-import { canViewCustomers } from "@/lib/roles";
+import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
 import { bem } from "@/lib/bem";
+
+export const dynamic = "force-dynamic";
+
 export default async function DashboardInterestsPage() {
+    noStore();
     const session = await auth();
-  if (!session?.user || !canViewCustomers(session.user.role)) {
+    if (!session?.user || !hasPermission(session.user.role, session.user.permissions, session.user.assignedSections, "INTERESTS")) {
         redirect("/dashboard");
     }
     const items = await prisma.projectInterest.findMany({

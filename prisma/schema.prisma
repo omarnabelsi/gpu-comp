@@ -24,6 +24,7 @@ model User {
   password         String
   role             Role      @default(CUSTOMER)
   assignedSections String    @default("BLOG")
+  permissions      String[]  @default([])
   accounts         Account[]
   sessions         Session[]
   createdAt        DateTime  @default(now())
