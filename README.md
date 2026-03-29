@@ -66,3 +66,15 @@ npm install
 ---
 
 Updated: concise developer instructions and troubleshooting notes.
+
+
+the .env :
+DATABASE_URL="postgresql://postgres.lypotwulzchvfpvoxbyh:omarxgamer13%40@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres"
+DIRECT_URL="postgresql://postgres.lypotwulzchvfpvoxbyh:omarxgamer13%40@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres"
+SUPABASE_URL="https://lypotwulzchvfpvoxbyh.supabase.co"
+SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG90d3VsemNodmZwdm94YnloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjIxNTksImV4cCI6MjA4OTI5ODE1OX0.3lcCpoi9Saq1x1sCN6DsLI0z44gRm7L6eoxE4JhiZdw"
+SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG90d3VsemNodmZwdm94YnloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzcyMjE1OSwiZXhwIjoyMDg5Mjk4MTU5fQ.H08Azw-KFaHgRO01qJDrNcFw3wsjJdvwdTptEv0yJ7A"
+AUTH_SECRET="srBw/007HGiR1wK4FihiKDxTWEoHXlX0HdKUOG1LQ68"
+NEXTAUTH_SECRET="srBw/007HGiR1wK4FihiKDxTWEoHXlX0HdKUOG1LQ68"
+NEXTAUTH_URL="http://localhost:3000"
+
